@@ -147,11 +147,22 @@ export default function Home() {
       {step === 'analyzing' && (
         <div className="max-w-4xl mx-auto">
           <div className="bg-slate-800 border border-slate-700 rounded-2xl p-12 text-center">
-            <div className="inline-block mb-6">
-              <div className="animate-spin">
-                <Zap className="w-12 h-12 text-cyan-400" />
-              </div>
-            </div>
+          <div className="inline-block mb-6">
+          <svg className="w-12 h-12 text-cyan-400 animate-bounce" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            {/* Head */}
+            <circle cx="50" cy="20" r="8" fill="currentColor" />
+            {/* Body */}
+            <line x1="50" y1="28" x2="50" y2="50" stroke="currentColor" strokeWidth="2" />
+            {/* Left arm */}
+            <line x1="50" y1="35" x2="30" y2="25" stroke="currentColor" strokeWidth="2" />
+            {/* Right arm */}
+            <line x1="50" y1="35" x2="70" y2="25" stroke="currentColor" strokeWidth="2" />
+            {/* Left leg */}
+            <line x1="50" y1="50" x2="35" y2="70" stroke="currentColor" strokeWidth="2" />
+            {/* Right leg */}
+            <line x1="50" y1="50" x2="65" y2="70" stroke="currentColor" strokeWidth="2" />
+          </svg>
+        </div>
             <h2 className="text-2xl font-bold mb-2">Analyzing Your Data...</h2>
             <p className="text-slate-400">
               Claude is mapping your columns to the destination template <br /> and flagging data quality issues.
