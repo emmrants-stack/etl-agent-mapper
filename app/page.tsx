@@ -71,11 +71,12 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-8">
       <div className="max-w-6xl mx-auto mb-12">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-cyan-500/20 rounded-lg">
-            <Zap className="w-6 h-6 text-cyan-400" />
-          </div>
-          <h1 className="text-4xl font-bold">ETL Agent Mapper</h1>
-        </div>
+        <div className="p-2 bg-cyan-500/20 rounded-full flex items-center justify-center w-12 h-12">
+        <span className="text-cyan-400 font-bold text-lg">OT</span>
+      </div>
+    <h1 className="text-4xl font-bold">ETL Agent Mapper</h1>
+</div>
+<p className="text-center text-slate-300 text-sm mb-8">A prototype attempt to automate data mapping for our customers and projects</p>
         <p className="text-slate-400 text-lg">Automated data mapping from raw files to ERP templates</p>
       </div>
 
