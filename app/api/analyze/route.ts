@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File is empty' }, { status: 400 });
     }
 
-    const headers = Object.keys(sourceData[0]);
+    const headers = Object.keys(sourceData[0] as Record<string, any>);
 
     const schema: Record<string, any> = {};
     headers.forEach((header) => {
