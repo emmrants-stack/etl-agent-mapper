@@ -1,0 +1,476 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    ETL AGENT MAPPER - COPY PASTE GUIDE                        ║
+║                    For: Muhammad (Non-Technical Setup)                        ║
+║                    Uses: HAIKU (Cheap), Vercel (Already Have)                 ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+YOU HAVE:
+✓ VS Code (installed)
+✓ Anthropic API access (can generate key)
+✓ Vercel account (multiple projects running)
+✓ GitHub (already use it)
+
+THIS GUIDE:
+- Copy code exactly as shown
+- Paste into VS Code
+- Click button in Vercel
+- Done
+
+TIME: 20 minutes total
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+STEP 1: CREATE PROJECT FOLDER (2 minutes)
+═══════════════════════════════════════════════════════════════════════════════════
+
+On your computer, create this folder:
+
+  C:\Users\YourName\Projects\etl-agent-mapper
+
+(Or on Mac: ~/Projects/etl-agent-mapper)
+(Or on Linux: ~/etl-agent-mapper)
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+STEP 2: DOWNLOAD FILES FROM OUTPUTS (2 minutes)
+═══════════════════════════════════════════════════════════════════════════════════
+
+Download these files and put them in etl-agent-mapper folder:
+
+From outputs folder, download:
+  □ FILE-app-page.tsx
+  □ FILE-api-analyze-route.ts
+  □ FILE-api-transform-route.ts
+  □ package.json
+  □ Messy_Customer_Raw_Extract.xlsx
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+STEP 3: RENAME FILES IN VS CODE (2 minutes)
+═══════════════════════════════════════════════════════════════════════════════════
+
+Open VS Code.
+
+File → Open Folder → Select etl-agent-mapper
+
+You'll see files on the left. Right-click each file and rename:
+
+FILE-app-page.tsx
+  → Rename to: app-page.tsx
+
+FILE-api-analyze-route.ts
+  → Rename to: api-analyze-route.ts
+
+FILE-api-transform-route.ts
+  → Rename to: api-transform-route.ts
+
+package.json
+  → Keep as is (already correct name)
+
+Messy_Customer_Raw_Extract.xlsx
+  → Keep as is (already correct name)
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+STEP 4: CREATE FOLDER STRUCTURE (2 minutes)
+═══════════════════════════════════════════════════════════════════════════════════
+
+In VS Code, right-click in the file list on the left and create NEW FOLDERS:
+
+├── app
+│   ├── api
+│   │   ├── analyze
+│   │   └── transform
+
+Steps:
+1. Right-click → New Folder → Name: "app"
+2. Inside app, right-click → New Folder → Name: "api"
+3. Inside api, right-click → New Folder → Name: "analyze"
+4. Inside api, right-click → New Folder → Name: "transform"
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+STEP 5: MOVE FILES TO CORRECT LOCATIONS (3 minutes)
+═══════════════════════════════════════════════════════════════════════════════════
+
+In VS Code, drag and drop files to organize:
+
+  app-page.tsx
+    → Drag into: app folder
+    → Rename to: page.tsx
+
+  api-analyze-route.ts
+    → Drag into: app/api/analyze folder
+    → Rename to: route.ts
+
+  api-transform-route.ts
+    → Drag into: app/api/transform folder
+    → Rename to: route.ts
+
+  package.json
+    → Keep in root (etl-agent-mapper folder)
+
+  Messy_Customer_Raw_Extract.xlsx
+    → Keep in root (for testing)
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+STEP 6: CREATE CONFIG FILES (3 minutes)
+═══════════════════════════════════════════════════════════════════════════════════
+
+In VS Code, right-click in root folder and create NEW FILES:
+
+FILE 1: tsconfig.json
+
+Right-click → New File → Name: tsconfig.json
+
+Copy and paste everything below:
+
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noImplicitAny": true
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}
+
+Press Ctrl + S to save.
+
+---
+
+FILE 2: next.config.js
+
+Right-click → New File → Name: next.config.js
+
+Copy and paste:
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+}
+module.exports = nextConfig
+
+Press Ctrl + S to save.
+
+---
+
+FILE 3: postcss.config.js
+
+Right-click → New File → Name: postcss.config.js
+
+Copy and paste:
+
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+
+Press Ctrl + S to save.
+
+---
+
+FILE 4: tailwind.config.js
+
+Right-click → New File → Name: tailwind.config.js
+
+Copy and paste:
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+
+Press Ctrl + S to save.
+
+---
+
+FILE 5: app/layout.tsx
+
+Right-click in app folder → New File → Name: layout.tsx
+
+Copy and paste:
+
+import type { Metadata } from 'next'
+import './globals.css'
+
+export const metadata: Metadata = {
+  title: 'ETL Agent Mapper',
+  description: 'AI-powered data mapping for ERP imports',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}
+
+Press Ctrl + S to save.
+
+---
+
+FILE 6: app/globals.css
+
+Right-click in app folder → New File → Name: globals.css
+
+Copy and paste:
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+Press Ctrl + S to save.
+
+---
+
+FILE 7: .env.local
+
+Right-click in root → New File → Name: .env.local
+
+(This is your SECRET - never share, never commit to GitHub)
+
+Go to: https://console.anthropic.com/
+Create a new API key
+Copy it
+
+Paste into .env.local:
+
+ANTHROPIC_API_KEY=sk-ant-YOUR_ACTUAL_KEY_HERE
+
+Replace YOUR_ACTUAL_KEY_HERE with your real key.
+
+Press Ctrl + S to save.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+STEP 7: FINAL FOLDER STRUCTURE CHECK (1 minute)
+═══════════════════════════════════════════════════════════════════════════════════
+
+Your folder should now look like:
+
+etl-agent-mapper/
+├── app/
+│   ├── api/
+│   │   ├── analyze/
+│   │   │   └── route.ts ✓
+│   │   └── transform/
+│   │       └── route.ts ✓
+│   ├── layout.tsx ✓
+│   ├── globals.css ✓
+│   └── page.tsx ✓
+├── .env.local ✓
+├── package.json ✓
+├── tsconfig.json ✓
+├── next.config.js ✓
+├── postcss.config.js ✓
+├── tailwind.config.js ✓
+└── Messy_Customer_Raw_Extract.xlsx (test data)
+
+If you see ✓ for all, you're ready for next step.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+STEP 8: INSTALL DEPENDENCIES (5 minutes)
+═══════════════════════════════════════════════════════════════════════════════════
+
+In VS Code:
+
+1. Press Ctrl + ` (backtick key, below Escape)
+
+   Black terminal appears at bottom.
+
+2. Type this command:
+
+   npm install
+
+3. WAIT 3-5 minutes.
+
+   You'll see:
+   "added 500+ packages"
+
+   When it says "up to date", it's done.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+STEP 9: TEST LOCALLY (3 minutes)
+═══════════════════════════════════════════════════════════════════════════════════
+
+In the SAME terminal, type:
+
+  npm run dev
+
+You'll see something like:
+
+  ▲ Next.js 14.2.0
+  - Local:        http://localhost:3000
+
+Open your browser and go to: http://localhost:3000
+
+You should see:
+- Dark background (slate gray)
+- Blue "ETL Agent Mapper" heading
+- White text
+- Blue upload button
+
+Click "Upload Your Data File"
+Select: Messy_Customer_Raw_Extract.xlsx
+Watch it analyze...
+
+If it works: ✓ EVERYTHING IS CORRECT
+
+If it breaks, check the terminal for errors. Share the error message.
+
+To stop the app: Press Ctrl + C in the terminal.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+STEP 10: PUSH TO GITHUB (2 minutes)
+═══════════════════════════════════════════════════════════════════════════════════
+
+In VS Code:
+
+1. Click "Source Control" icon on left (looks like branches)
+
+2. Click "Initialize Repository"
+
+3. You'll see all files listed with "U" (untracked)
+
+4. Click the "+" icon next to "Changes" to stage all files
+
+5. In the message box, type:
+
+   Initial commit - ETL Agent Mapper
+
+6. Click the checkmark to commit
+
+7. Click "Publish Branch"
+
+   It will ask which GitHub account. Select yours.
+
+Done. Code is on GitHub.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+STEP 11: DEPLOY TO VERCEL (3 minutes) - YOU ALREADY HAVE ACCOUNT
+═══════════════════════════════════════════════════════════════════════════════════
+
+1. Go to: https://vercel.com/dashboard
+
+2. Click "Add New" (top right)
+
+3. Click "Project"
+
+4. Click "Import Git Repository"
+
+5. Find "etl-agent-mapper" in the list
+
+6. Click "Import"
+
+7. You'll see "Configure Project" page
+
+   Scroll down to "Environment Variables"
+
+8. Click "Add New"
+
+   Name: ANTHROPIC_API_KEY
+   Value: sk-ant-YOUR_KEY (paste your key from Step 6)
+
+9. Click "Deploy"
+
+   WAIT 2 minutes...
+
+10. When done, Vercel shows you a URL:
+
+    https://etl-agent-mapper-abc123.vercel.app
+
+Copy that URL. That's your live app. You can share it with anyone.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+STEP 12: TEST LIVE APP (1 minute)
+═══════════════════════════════════════════════════════════════════════════════════
+
+Go to your Vercel URL in browser.
+
+Upload: Messy_Customer_Raw_Extract.xlsx
+
+If it works: ✓ YOU'RE DONE
+
+Your app is live and using HAIKU (cheap).
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+WHAT USES HAIKU (CHEAP)
+═══════════════════════════════════════════════════════════════════════════════════
+
+The code already has this line in route.ts:
+
+  model: 'claude-3-5-haiku-20241022',
+
+This means:
+- Every file you upload uses HAIKU
+- HAIKU costs 3x less than Sonnet
+- 100 files = ~$1 (instead of ~$3)
+
+NO CHANGES NEEDED. It's already cheap.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+COST ESTIMATE (Using HAIKU)
+═══════════════════════════════════════════════════════════════════════════════════
+
+Per file:     ~$0.01
+100 files:    ~$1.00
+1000 files:   ~$10.00
+
+That's it. No other costs. Vercel hosting is free for small projects.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+DONE
+═══════════════════════════════════════════════════════════════════════════════════
+
+You now have a live ETL Agent app.
+
+URL: Share it with your team. Anyone can use it.
+
+It uploads messy Excel, Claude analyzes with HAIKU, returns clean mapped data.
+
+Questions? Check the README.md in outputs folder.
+
+Good luck. 🚀
