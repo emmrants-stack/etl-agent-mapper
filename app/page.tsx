@@ -70,15 +70,15 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-8">
       <div className="max-w-6xl mx-auto mb-12">
-  <div className="flex items-center gap-3 mb-4">
-    <div className="p-2 bg-cyan-500/20 rounded-full flex items-center justify-center w-12 h-12">
-      <span className="text-cyan-400 font-bold text-lg">OT</span>
-    </div>
-    <h1 className="text-4xl font-bold">ETL Agent Mapper</h1>
-  </div>
-  <p className="text-slate-300 text-sm mb-2">A prototype attempt to automate data mapping for our customers and projects</p>
-  <p className="text-slate-400 text-lg">Automated data mapping from raw files to ERP templates</p>
-</div>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-cyan-500/20 rounded-full flex items-center justify-center w-12 h-12">
+            <span className="text-cyan-400 font-bold text-lg">OT</span>
+          </div>
+          <h1 className="text-4xl font-bold">ETL Agent Mapper</h1>
+        </div>
+        <p className="text-slate-300 text-sm mb-2">A prototype attempt to automate data mapping for our customers and projects</p>
+        <p className="text-slate-400 text-lg">Automated data mapping from raw files to ERP templates</p>
+      </div>
 
       <div className="max-w-6xl mx-auto grid grid-cols-3 gap-4 mb-12">
         {['upload', 'review', 'transform', 'complete'].map((s, i) => (
@@ -148,22 +148,22 @@ export default function Home() {
       {step === 'analyzing' && (
         <div className="max-w-4xl mx-auto">
           <div className="bg-slate-800 border border-slate-700 rounded-2xl p-12 text-center">
-          <div className="inline-block mb-6">
-          <svg className="w-12 h-12 text-cyan-400 animate-bounce" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            {/* Head */}
-            <circle cx="50" cy="20" r="8" fill="currentColor" />
-            {/* Body */}
-            <line x1="50" y1="28" x2="50" y2="50" stroke="currentColor" strokeWidth="2" />
-            {/* Left arm */}
-            <line x1="50" y1="35" x2="30" y2="25" stroke="currentColor" strokeWidth="2" />
-            {/* Right arm */}
-            <line x1="50" y1="35" x2="70" y2="25" stroke="currentColor" strokeWidth="2" />
-            {/* Left leg */}
-            <line x1="50" y1="50" x2="35" y2="70" stroke="currentColor" strokeWidth="2" />
-            {/* Right leg */}
-            <line x1="50" y1="50" x2="65" y2="70" stroke="currentColor" strokeWidth="2" />
-          </svg>
-        </div>
+            <div className="inline-block mb-6">
+              <svg className="w-12 h-12 text-cyan-400 animate-bounce" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                {/* Head */}
+                <circle cx="50" cy="20" r="8" fill="currentColor" />
+                {/* Body */}
+                <line x1="50" y1="28" x2="50" y2="50" stroke="currentColor" strokeWidth="2" />
+                {/* Left arm */}
+                <line x1="50" y1="35" x2="30" y2="25" stroke="currentColor" strokeWidth="2" />
+                {/* Right arm */}
+                <line x1="50" y1="35" x2="70" y2="25" stroke="currentColor" strokeWidth="2" />
+                {/* Left leg */}
+                <line x1="50" y1="50" x2="35" y2="70" stroke="currentColor" strokeWidth="2" />
+                {/* Right leg */}
+                <line x1="50" y1="50" x2="65" y2="70" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </div>
             <h2 className="text-2xl font-bold mb-2">Analyzing Your Data...</h2>
             <p className="text-slate-400">
               Claude is mapping your columns to the destination template <br /> and flagging data quality issues.
@@ -216,7 +216,9 @@ export default function Home() {
                 <tbody className="divide-y divide-slate-700">
                   {mappingResult.mappings.mappings.slice(0, 10).map((m: any, i: number) => (
                     <tr key={i} className="hover:bg-slate-700/30 transition">
-                      <td className="px-6 py-4 font-mono text-cyan-400">{m.source_column}</td>
+                      <td className="px-6 py-4 font-mono text-cyan-400">
+                        {Array.isArray(m.source_columns) ? m.source_columns.join(', ') : m.source_column || 'N/A'}
+                      </td>
                       <td className="px-6 py-4">{m.destination_field || '—'}</td>
                       <td className="px-6 py-4">
                         <span
@@ -255,12 +257,14 @@ export default function Home() {
                   <div key={i} className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
                     <div className="flex items-start gap-3">
                       <div className="px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400 uppercase">
-                        {issue.type}
+                        {issue.severity || issue.type}
                       </div>
                       <div className="flex-1">
-                        <p className="font-semibold text-red-300 mb-1">{issue.details}</p>
-                        <p className="text-sm text-slate-400 mb-2">Rows: {Array.isArray(issue.affected_rows) ? issue.affected_rows.join(', ') : 'N/A'}</p>
-                        <p className="text-sm text-red-300">{issue.recommendation}</p>
+                        <p className="font-semibold text-red-300 mb-1">{issue.issue || issue.details}</p>
+                        <p className="text-sm text-slate-400 mb-2">
+                          Columns: {Array.isArray(issue.affected_columns) ? issue.affected_columns.join(', ') : 'N/A'}
+                        </p>
+                        <p className="text-sm text-red-300">{issue.details}</p>
                       </div>
                     </div>
                   </div>
