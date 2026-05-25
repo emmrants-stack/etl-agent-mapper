@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import * as XLSX from 'xlsx';
-import { normalizeData } from './normalizer';
+import { normalizeData } from '../normalizer';
 
 const client = new Anthropic();
 
