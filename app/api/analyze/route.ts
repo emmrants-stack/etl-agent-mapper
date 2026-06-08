@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
         // Check if it might be Salesforce denormalized
         if (sourceData.length > 0) {
           const keys = Object.keys(sourceData[0]);
-          if (keys.some((k) => /Contact \d+ (Name|Email)/.test(k))) {
+          if (keys.some((k: string) => /Contact \d+ (Name|Email)/.test(k))) {
             normalizationResult = normalizeData(sourceData);
             if (normalizationResult.success) {
               sourceData = normalizationResult.rows;

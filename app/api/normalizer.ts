@@ -125,7 +125,7 @@ function detectFormat(data: any): string {
 
     // Salesforce: has Contact 1, Contact 2, Opportunity 1, etc
     const keys = Object.keys(firstRecord);
-    if (keys.some((k) => /Contact \d+ (Name|Email)/.test(k)) || keys.some((k) => /Opportunity \d+ (Name|Amount)/.test(k))) {
+    if (keys.some((k: string) => /Contact \d+ (Name|Email)/.test(k)) || keys.some((k: string) => /Opportunity \d+ (Name|Amount)/.test(k))) {
       return 'salesforce-denormalized';
     }
 
@@ -160,13 +160,13 @@ function normalizeMongoDBNested(data: any) {
 
   const records = Array.isArray(data) ? data : [data];
 
-  records.forEach((record, recordIdx) => {
+  records.forEach((record: any, recordIdx: number) => {
     try {
       // Flatten nested objects
       const flatRecord = flattenObject(record, '');
 
       // Check for arrays that need expansion
-      const arrayFields = Object.keys(flatRecord).filter((key) => Array.isArray(flatRecord[key]));
+      const arrayFields = Object.keys(flatRecord).filter((key: string) => Array.isArray(flatRecord[key]));
 
       if (arrayFields.length > 0) {
         // Expand arrays - create one row per array item
@@ -175,7 +175,7 @@ function normalizeMongoDBNested(data: any) {
         const nonArrayData = { ...flatRecord };
         delete nonArrayData[mainArrayField];
 
-        arrayItems.forEach((item, itemIdx) => {
+        arrayItems.forEach((item: any, itemIdx: number) => {
           const expandedRow = {
             ...nonArrayData,
             ...flattenObject(item, `${mainArrayField}_`),
@@ -208,7 +208,7 @@ function normalizeSalesforcedenormalized(data: any) {
 
   const records = Array.isArray(data) ? data : [data];
 
-  records.forEach((record, recordIdx) => {
+  records.forEach((record: any, recordIdx: number) => {
     try {
       // Identify contact and opportunity groups
       const contactGroups = extractNumberedGroups(record, 'Contact');
@@ -218,7 +218,7 @@ function normalizeSalesforcedenormalized(data: any) {
       const baseRecord = { ...record };
 
       // Remove all Contact and Opportunity fields from base
-      Object.keys(baseRecord).forEach((key) => {
+      Object.keys(baseRecord).forEach((key: string) => {
         if (/Contact \d+|Opportunity \d+/.test(key)) {
           delete baseRecord[key];
         }
@@ -234,14 +234,14 @@ function normalizeSalesforcedenormalized(data: any) {
 
           // Add contact fields
           if (contactGroups[i]) {
-            Object.keys(contactGroups[i]).forEach((key) => {
+            Object.keys(contactGroups[i]).forEach((key: string) => {
               expandedRow[`contact_${key}`] = contactGroups[i][key];
             });
           }
 
           // Add first opportunity
           if (opportunityGroups[0]) {
-            Object.keys(opportunityGroups[0]).forEach((key) => {
+            Object.keys(opportunityGroups[0]).forEach((key: string) => {
               expandedRow[`opportunity_${key}`] = opportunityGroups[0][key];
             });
           }
@@ -285,12 +285,12 @@ function normalizeJSONAPIHybrid(data: any) {
 
   records = Array.isArray(records) ? records : [records];
 
-  records.forEach((record, recordIdx) => {
+  records.forEach((record: any, recordIdx: number) => {
     try {
       const flatRecord: NormalizedRow = {};
       const parsedJsonFields: string[] = [];
 
-      Object.keys(record).forEach((key) => {
+      Object.keys(record).forEach((key: string) => {
         const value = record[key];
 
         // Try to parse JSON strings
@@ -340,14 +340,14 @@ function normalizeJSONAPIHybrid(data: any) {
 /**
  * Flatten nested objects with prefix
  */
-function flattenObject(obj: any, prefix = ''): NormalizedRow {
+function flattenObject(obj: any, prefix: string = ''): NormalizedRow {
   const flattened: NormalizedRow = {};
 
   if (!obj || typeof obj !== 'object') {
     return { [prefix.slice(0, -1)]: obj };
   }
 
-  Object.keys(obj).forEach((key) => {
+  Object.keys(obj).forEach((key: string) => {
     const value = obj[key];
     const newKey = prefix + key;
 
@@ -373,7 +373,7 @@ function extractNumberedGroups(record: any, prefix: string) {
   const groups: NormalizedRow[] = [];
   const groupMap: Record<number, NormalizedRow> = {};
 
-  Object.keys(record).forEach((key) => {
+  Object.keys(record).forEach((key: string) => {
     const match = key.match(new RegExp(`^${prefix} (\\d+) (.+)$`));
     if (match) {
       const groupNum = parseInt(match[1]) - 1; // 0-indexed
@@ -389,6 +389,6 @@ function extractNumberedGroups(record: any, prefix: string) {
 
   // Convert to array, sorted by key
   return Object.keys(groupMap)
-    .sort((a, b) => parseInt(a) - parseInt(b))
-    .map((key) => groupMap[parseInt(key)]);
+    .sort((a: string, b: string) => parseInt(a) - parseInt(b))
+    .map((key: string) => groupMap[parseInt(key)]);
 }
