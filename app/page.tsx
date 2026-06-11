@@ -37,6 +37,185 @@ const TEMPLATES: Template[] = [
   },
 ];
 
+// Animated Loading Component
+function AnimatedLoader({ templateName }: { templateName: string }) {
+  const [stickmanY, setStickmanY] = useState(0);
+  const [roadOffset, setRoadOffset] = useState(0);
+  const [obstacles, setObstacles] = useState<{ id: number; x: number; type: 'box' | 'barrier' | 'spike' }[]>([]);
+  const [action, setAction] = useState<'run' | 'jump' | 'duck' | 'roll'>('run');
+
+  // Simulate animation
+  React.useEffect(() => {
+    let frameCount = 0;
+    const interval = setInterval(() => {
+      frameCount++;
+
+      // Road animation
+      setRoadOffset((prev) => (prev + 3) % 40);
+
+      // Generate obstacles
+      if (frameCount % 80 === 0) {
+        setObstacles((prev) => [
+          ...prev,
+          { id: Date.now(), x: 800, type: ['box', 'barrier', 'spike'][Math.floor(Math.random() * 3)] as any },
+        ]);
+      }
+
+      // Remove offscreen obstacles
+      setObstacles((prev) => prev.filter((o) => o.x > -50));
+
+      // Move obstacles
+      setObstacles((prev) =>
+        prev.map((o) => {
+          const newX = o.x - 4;
+
+          // Simple collision detection - change action
+          if (newX > 140 && newX < 180) {
+            if (o.type === 'spike') {
+              setAction('jump');
+              setTimeout(() => setAction('run'), 300);
+            } else if (o.type === 'barrier') {
+              setAction('duck');
+              setTimeout(() => setAction('run'), 300);
+            } else if (o.type === 'box') {
+              setAction('roll');
+              setTimeout(() => setAction('run'), 400);
+            }
+          }
+
+          return { ...o, x: newX };
+        })
+      );
+
+      // Stickman vertical position based on action
+      if (action === 'jump') {
+        setStickmanY(Math.sin((frameCount % 20) / 20 * Math.PI) * -30);
+      } else if (action === 'duck') {
+        setStickmanY(15);
+      } else if (action === 'roll') {
+        setStickmanY(0);
+      } else {
+        setStickmanY(0);
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [action]);
+
+  return (
+    <div className="flex flex-col items-center gap-6">
+      {/* Game Canvas */}
+      <div className="relative w-full max-w-2xl h-48 bg-gradient-to-b from-sky-400 to-sky-200 rounded-lg overflow-hidden border-4 border-cyan-400">
+        {/* Sun */}
+        <div className="absolute top-4 right-8 w-12 h-12 bg-yellow-300 rounded-full opacity-80" />
+
+        {/* Clouds */}
+        <div className="absolute top-8 left-12 w-20 h-8 bg-white rounded-full opacity-70" />
+        <div className="absolute top-16 right-20 w-16 h-6 bg-white rounded-full opacity-70" />
+
+        {/* Road */}
+        <div className="absolute bottom-0 w-full h-20 bg-gray-700">
+          {/* Road lines animation */}
+          <div
+            className="absolute inset-0 bg-repeat-x"
+            style={{
+              backgroundImage: 'repeating-linear-gradient(90deg, #ffd700 0px, #ffd700 40px, transparent 40px, transparent 80px)',
+              transform: `translateX(${roadOffset}px)`,
+            }}
+          />
+        </div>
+
+        {/* Grass */}
+        <div className="absolute bottom-20 w-full h-8 bg-gradient-to-r from-green-500 to-green-600" />
+
+        {/* Obstacles */}
+        {obstacles.map((obs) => (
+          <div
+            key={obs.id}
+            className="absolute bottom-20 w-10 h-10 transition-all"
+            style={{ left: `${obs.x}px` }}
+          >
+            {obs.type === 'box' && <div className="w-full h-full bg-red-500 rounded shadow-lg" />}
+            {obs.type === 'barrier' && <div className="w-2 h-full bg-orange-600 rounded-full" />}
+            {obs.type === 'spike' && (
+              <svg viewBox="0 0 40 40" className="w-full h-full">
+                <polygon points="20,5 35,35 5,35" fill="#ff4444" />
+              </svg>
+            )}
+          </div>
+        ))}
+
+        {/* Stickman */}
+        <div
+          className="absolute bottom-20 left-24 transition-all"
+          style={{ transform: `translateY(${stickmanY}px)` }}
+        >
+          {action === 'duck' ? (
+            // Ducking
+            <svg viewBox="0 0 40 40" className="w-10 h-10">
+              {/* Head */}
+              <circle cx="20" cy="10" r="5" fill="#000" />
+              {/* Body (curved) */}
+              <path d="M 20 15 Q 25 18 20 22" stroke="#000" strokeWidth="2" fill="none" />
+              {/* Legs (crouched) */}
+              <line x1="18" y1="22" x2="15" y2="30" stroke="#000" strokeWidth="2" />
+              <line x1="22" y1="22" x2="25" y2="30" stroke="#000" strokeWidth="2" />
+            </svg>
+          ) : action === 'roll' ? (
+            // Rolling
+            <svg viewBox="0 0 40 40" className="w-10 h-10 animate-spin">
+              <circle cx="20" cy="20" r="4" fill="#000" />
+              <line x1="20" y1="16" x2="20" y2="24" stroke="#000" strokeWidth="2" />
+              <line x1="16" y1="20" x2="24" y2="20" stroke="#000" strokeWidth="2" />
+            </svg>
+          ) : action === 'jump' ? (
+            // Jumping
+            <svg viewBox="0 0 40 40" className="w-10 h-10">
+              {/* Head */}
+              <circle cx="20" cy="8" r="5" fill="#000" />
+              {/* Body */}
+              <line x1="20" y1="13" x2="20" y2="20" stroke="#000" strokeWidth="2" />
+              {/* Arms up */}
+              <line x1="20" y1="14" x2="12" y2="8" stroke="#000" strokeWidth="2" />
+              <line x1="20" y1="14" x2="28" y2="8" stroke="#000" strokeWidth="2" />
+              {/* Legs bent */}
+              <line x1="20" y1="20" x2="15" y2="28" stroke="#000" strokeWidth="2" />
+              <line x1="20" y1="20" x2="25" y2="28" stroke="#000" strokeWidth="2" />
+            </svg>
+          ) : (
+            // Running
+            <svg viewBox="0 0 40 40" className="w-10 h-10">
+              {/* Head */}
+              <circle cx="20" cy="8" r="5" fill="#000" />
+              {/* Body */}
+              <line x1="20" y1="13" x2="20" y2="22" stroke="#000" strokeWidth="2" />
+              {/* Arms running */}
+              <line x1="20" y1="14" x2="14" y2="10" stroke="#000" strokeWidth="2" />
+              <line x1="20" y1="14" x2="26" y2="18" stroke="#000" strokeWidth="2" />
+              {/* Legs running */}
+              <line x1="20" y1="22" x2="16" y2="32" stroke="#000" strokeWidth="2" />
+              <line x1="20" y1="22" x2="26" y2="28" stroke="#000" strokeWidth="2" />
+            </svg>
+          )}
+        </div>
+
+        {/* Text overlay */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="text-center bg-black/30 px-4 py-2 rounded-lg">
+            <p className="text-white font-bold text-sm">Running the data through Claude...</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Status text */}
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-2">Analyzing Your Data...</h2>
+        <p className="text-slate-400">Mapping columns to {templateName} template</p>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [step, setStep] = useState<'upload' | 'select-template' | 'analyzing' | 'review' | 'transform' | 'complete'>('upload');
   const [file, setFile] = useState<File | null>(null);
@@ -213,19 +392,8 @@ export default function Home() {
       {/* ANALYZING */}
       {step === 'analyzing' && (
         <div className="max-w-4xl mx-auto">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-12 text-center">
-            <div className="inline-block mb-6">
-              <svg className="w-12 h-12 text-cyan-400 animate-bounce" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="20" r="8" fill="currentColor" />
-                <line x1="50" y1="28" x2="50" y2="50" stroke="currentColor" strokeWidth="2" />
-                <line x1="50" y1="35" x2="30" y2="25" stroke="currentColor" strokeWidth="2" />
-                <line x1="50" y1="35" x2="70" y2="25" stroke="currentColor" strokeWidth="2" />
-                <line x1="50" y1="50" x2="35" y2="70" stroke="currentColor" strokeWidth="2" />
-                <line x1="50" y1="50" x2="65" y2="70" stroke="currentColor" strokeWidth="2" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold mb-2">Analyzing Your Data...</h2>
-            <p className="text-slate-400">Mapping columns to {TEMPLATES.find((t) => t.id === selectedTemplate)?.name}</p>
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-12">
+            <AnimatedLoader templateName={TEMPLATES.find((t) => t.id === selectedTemplate)?.name || 'Unknown'} />
           </div>
         </div>
       )}
@@ -323,12 +491,8 @@ export default function Home() {
       {/* TRANSFORM */}
       {step === 'transform' && (
         <div className="max-w-4xl mx-auto">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-12 text-center">
-            <div className="inline-block mb-6 animate-spin">
-              <Zap className="w-12 h-12 text-cyan-400" />
-            </div>
-            <h2 className="text-2xl font-bold mb-2">Generating Excel...</h2>
-            <p className="text-slate-400">Transforming data to {TEMPLATES.find((t) => t.id === selectedTemplate)?.name} format</p>
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-12">
+            <AnimatedLoader templateName={TEMPLATES.find((t) => t.id === selectedTemplate)?.name || 'Unknown'} />
           </div>
         </div>
       )}
