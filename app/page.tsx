@@ -7,11 +7,7 @@ export default function Home() {
   const [step, setStep] = useState<'upload' | 'analyzing' | 'review' | 'transform' | 'complete'>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [mappingResult, setMappingResult] = useState<any>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState('Customers');
   const [expandedEntity, setExpandedEntity] = useState<string | null>(null);
-  const [selectedEntities, setSelectedEntities] = useState<Record<string, boolean>>({});
-
-  const templates = ['Customers', 'Contacts', 'Reference Accounts', 'Bank Accounts'];
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0];
@@ -23,7 +19,7 @@ export default function Home() {
     try {
       const formData = new FormData();
       formData.append('file', uploadedFile);
-      formData.append('template', selectedTemplate);
+      formData.append('template', 'Customers'); // Default, but auto-detection will override
 
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -33,14 +29,6 @@ export default function Home() {
       if (!response.ok) throw new Error('Analysis failed');
       const result = await response.json();
       setMappingResult(result);
-
-      // Initialize selected entities
-      const entitySelection: Record<string, boolean> = {};
-      result.detected_entities?.forEach((e: any) => {
-        entitySelection[e.name] = true;
-      });
-      setSelectedEntities(entitySelection);
-
       setStep('review');
     } catch (error) {
       console.error('Error:', error);
@@ -82,8 +70,8 @@ export default function Home() {
           </div>
           <h1 className="text-4xl font-bold">ETL Agent Mapper</h1>
         </div>
-        <p className="text-slate-300 text-sm mb-2">Multi-entity data mapping - handles all Oracle Fusion templates</p>
-        <p className="text-slate-400 text-lg">Automated data mapping from raw files to all ERP templates</p>
+        <p className="text-slate-300 text-sm mb-2">Multi-entity data mapping - auto-detects all Oracle entities</p>
+        <p className="text-slate-400 text-lg">Upload once → Maps to all 4 Oracle Fusion templates → Download complete Excel</p>
       </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-4 gap-3 mb-12">
@@ -104,21 +92,6 @@ export default function Home() {
       {step === 'upload' && (
         <div className="max-w-4xl mx-auto">
           <div className="bg-slate-800 border border-slate-700 rounded-2xl p-12">
-            <label className="block text-sm font-semibold mb-4">Select Primary Template (Optional)</label>
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              {templates.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setSelectedTemplate(t)}
-                  className={`p-4 rounded-lg border-2 transition text-left ${
-                    selectedTemplate === t ? 'border-cyan-500 bg-cyan-500/10' : 'border-slate-700 bg-slate-700/30 hover:border-slate-600'
-                  }`}
-                >
-                  <div className="font-medium">{t}</div>
-                  <div className="text-xs text-slate-400 mt-1">Primary focus</div>
-                </button>
-              ))}
-            </div>
             <div className="border-2 border-dashed border-slate-600 rounded-xl p-12 text-center hover:border-cyan-400 transition cursor-pointer relative mb-6">
               <input
                 type="file"
@@ -129,11 +102,11 @@ export default function Home() {
               <Upload className="w-12 h-12 text-slate-500 mx-auto mb-4" />
               <p className="text-lg font-semibold mb-2">Upload Your Data File</p>
               <p className="text-sm text-slate-400">Drag & drop or click to select <strong>.xlsx, .xls, .csv, or .json</strong></p>
-              {file && <p className="text-xs text-cyan-400 mt-4">Selected: {file.name}</p>}
+              {file && <p className="text-xs text-cyan-400 mt-4">📁 {file.name}</p>}
             </div>
             <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg text-sm text-blue-300">
-              <p className="font-semibold mb-1">Supported formats:</p>
-              <p>✓ Relational (CSV, Excel) ✓ MongoDB (nested JSON) ✓ Salesforce ✓ JSON APIs</p>
+              <p className="font-semibold mb-1">✓ Auto-detects all entities and maps to:</p>
+              <p>Customers • Contacts • Reference Accounts • Bank Accounts</p>
             </div>
           </div>
         </div>
@@ -270,7 +243,7 @@ export default function Home() {
             </button>
             <button onClick={handleTransform} className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg transition font-semibold flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
-              Generate All Sheets
+              Generate Excel (All 4 Sheets)
             </button>
           </div>
         </div>
