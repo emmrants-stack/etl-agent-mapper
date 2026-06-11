@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload, AlertCircle, CheckCircle2, Zap, TrendingUp, ChevronRight } from 'lucide-react';
 
 interface Template {
@@ -45,7 +45,7 @@ function AnimatedLoader({ templateName }: { templateName: string }) {
   const [action, setAction] = useState<'run' | 'jump' | 'duck' | 'roll'>('run');
 
   // Simulate animation
-  React.useEffect(() => {
+  useEffect(() => {
     let frameCount = 0;
     const interval = setInterval(() => {
       frameCount++;
