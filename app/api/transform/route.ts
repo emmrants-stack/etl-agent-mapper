@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     // Generate multi-sheet Excel
     const buffer = generateMultiSheetExcel(entityDataForExcel);
 
-    return new NextResponse(buffer, {
+    return new NextResponse(buffer as any, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': `attachment; filename="oracle-fusion-complete-${Date.now()}.xlsx"`,
