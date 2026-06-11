@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import * as XLSX from 'xlsx';
 import { normalizeData } from '../normalizer';
-import { detectEntities, createEntityMappings, generateEntityAnalysis, splitRowsByEntity } from '../entity-detector';
+import { getTemplate } from '../template-registry';
 
 const client = new Anthropic();
 
@@ -10,10 +10,19 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const template = formData.get('template') as string;
+    const selectedTemplate = formData.get('template') as string;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+    }
+
+    if (!selectedTemplate) {
+      return NextResponse.json({ error: 'No template selected' }, { status: 400 });
+    }
+
+    const templateConfig = getTemplate(selectedTemplate);
+    if (!templateConfig) {
+      return NextResponse.json({ error: `Template ${selectedTemplate} not found` }, { status: 400 });
     }
 
     // Read and normalize data
@@ -43,7 +52,7 @@ export async function POST(request: NextRequest) {
         sourceData = XLSX.utils.sheet_to_json(sheet);
         fileFormat = 'csv-tabular';
 
-        // Check for Salesforce denormalization
+        // Try normalization for Salesforce pattern
         if (sourceData.length > 0) {
           const keys = Object.keys(sourceData[0]);
           if (keys.some((k: string) => /Contact \d+ (Name|Email)/.test(k))) {
@@ -55,49 +64,40 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (csvError) {
-        return NextResponse.json({ error: 'Could not parse file' }, { status: 400 });
+        return NextResponse.json({ error: 'Could not parse file as JSON, CSV, or Excel' }, { status: 400 });
       }
     }
 
     if (sourceData.length === 0) {
-      return NextResponse.json({ error: 'File is empty' }, { status: 400 });
+      return NextResponse.json({ error: 'File is empty or contains no data' }, { status: 400 });
     }
 
     const headers = Object.keys(sourceData[0]);
 
-    // NEW: Detect entities in the data
-    const detectedEntities = detectEntities(sourceData);
-
-    if (detectedEntities.length === 0) {
-      return NextResponse.json({ error: 'No recognizable entities detected in data' }, { status: 400 });
-    }
-
-    // Call Claude for column mappings (existing flow)
+    // Build prompt for Claude
     const formatInfo = normalizationResult
       ? `
 Format detected: ${normalizationResult.format_detected}
 - Original records: ${normalizationResult.metadata.original_record_count}
 - Normalized records: ${normalizationResult.metadata.normalized_record_count}
-- Arrays expanded: ${normalizationResult.metadata.array_fields_expanded.join(', ') || 'none'}
 `
       : '';
 
-    const analysisPrompt = `Map this data to Oracle Fusion Customer template.
+    const analysisPrompt = `Map this data to Oracle Fusion ${templateConfig.name} template.
 
-Detected entities in source: ${detectedEntities.map((e) => e.name).join(', ')}
 ${formatInfo}
 
-Columns: ${headers.join(', ')}
-Sample: ${JSON.stringify(sourceData[0])}
+Source columns: ${headers.join(', ')}
+Sample row: ${JSON.stringify(sourceData[0])}
 
-Destination fields: ORGANIZATION_NAME, ACCOUNT_NAME, ADDRESS1, ADDRESS2, ADDRESS3, ADDRESS4, CITY, STATE, POSTAL_CODE, COUNTRY, EMAIL, PHONE
+Destination template fields (sample): ${templateConfig.sample_columns.join(', ')}
 
-Return JSON:
+Return JSON only:
 {
   "mappings": [{"source_columns": ["col"], "destination_field": "FIELD", "confidence": "HIGH", "transformation": "TRIM"}],
-  "unmapped_columns": [{"column": "col", "reason": "reason"}],
-  "data_quality_issues": [{"severity": "HIGH", "issue_type": "TYPE", "details": "detail", "recommended_fix": "fix"}],
-  "summary": {"total_source_columns": ${headers.length}, "mapped_columns": 5, "unmapped_columns": 10, "critical_issues": 0}
+  "unmapped_columns": [{"column": "col", "reason": "not applicable"}],
+  "data_quality_issues": [{"severity": "HIGH", "issue_type": "TYPE", "details": "desc", "recommended_fix": "fix"}],
+  "summary": {"mapped": 5, "unmapped": 10, "critical_issues": 0}
 }`;
 
     const response = await client.messages.create({
@@ -115,30 +115,18 @@ Return JSON:
       mappings = JSON.parse(jsonStr);
     } catch (parseError) {
       console.error('Parse error:', responseText.substring(0, 200));
-      return NextResponse.json({ error: 'Parse failed' }, { status: 500 });
+      return NextResponse.json({ error: 'Claude response parsing failed' }, { status: 500 });
     }
 
-    // NEW: Create entity-specific mappings
-    const entityMappings = createEntityMappings(mappings, sourceData, detectedEntities);
-
-    // NEW: Generate entity analysis
-    const entityAnalysis = generateEntityAnalysis(sourceData, mappings, detectedEntities);
-
-    // NEW: Split rows by entity
-    const entityRows = splitRowsByEntity(sourceData, entityMappings);
-
     return NextResponse.json({
+      template: selectedTemplate,
+      template_config: templateConfig,
       mappings,
       sourceSchema: {
         headers,
         total_rows: sourceData.length,
         sample_rows: sourceData.slice(0, 5),
       },
-      // NEW: Add multi-entity information
-      detected_entities: detectedEntities,
-      entity_analysis: entityAnalysis,
-      entity_rows: entityRows,
-      entity_mappings: entityMappings,
       normalization: normalizationResult,
       file_format: fileFormat,
       timestamp: new Date().toISOString(),
